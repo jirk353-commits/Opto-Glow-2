@@ -1,29 +1,16 @@
-# Opto Glow by ROHIT JI
+# ROHIT JI Plugins
 
-Vintage-style opto compressor VST3 by ROHIT JI.
+VST3 audio plugins for Windows (64-bit and 32-bit), built automatically with MSVC on GitHub Actions.
 
-## Controls
-
-| Section | Control | What it does |
+| Plugin | What it is | Download |
 |---|---|---|
-| Opto Compressor | SMOOTH / PUNCH | SMOOTH = slow, program-dependent opto (LA-2A style). PUNCH = faster, more forward opto (LA-3A style). |
-| | Peak Reduction | How much it compresses. |
-| | Gain | Make-up gain after compression. |
-| | Compress / Limit | Limit = higher ratio, firmer knee. |
-| Tone | Warmth | Low shelf + low-mid body. |
-| | Bite | Presence bell + high shelf for sharpness. |
-| | SC HPF | Sidechain high-pass so bass doesn't over-trigger compression. |
-| Saturation | Clean / Warm / Triode / Retro / Tape | Saturation character (4x oversampled). |
-| | Drive, Sat Mix | Amount and blend of saturation. |
-| Output | Mix, Output | Parallel (New York) compression blend and final level. |
+| **Opto Glow** | Vintage opto compressor (LA-2A / LA-3A style) with tone and saturation | [Opto-Glow-Setup.exe](../../releases/tag/opto-glow) |
+| **Glow Verb** | Algorithmic reverb: 9 environments, reverb EQ, saturation + air, sidechain ducking | [Glow-Verb-Setup.exe](../../releases/tag/glow-verb) |
 
-Includes 10 factory presets (Vocal Silk, Vocal Bite, Devotional Lead, Drum Bus Glue, Bass Thick, Retro Radio, ...).
+Run the setup, click **Next > Install > Finish**. The installer lets you choose 64-bit, 32-bit or both.
 
-## Download
+## Layout
 
-Get **Opto-Glow-Setup.exe** from the [latest release](../../releases/tag/latest), run it and click Next > Install > Finish.
-
-## How it is built
-
-Every push to `main` builds the plugin with MSVC on GitHub Actions and packages it into a
-standard setup wizard (Inno Setup, `Installer/OptoGlow.iss`), published as the `latest` release.
+- `OptoGlow/`, `GlowVerb/` - one JUCE/CMake project per plugin (`Source/`, `Tests/`, `Installer/` art)
+- `installer/plugin-setup.iss` - shared Inno Setup wizard
+- `.github/workflows/build-windows.yml` - builds x64 + Win32 for each plugin, makes the installers and publishes releases
