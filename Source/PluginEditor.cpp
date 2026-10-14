@@ -144,7 +144,7 @@ void GlowLookAndFeel::drawButtonBackground (Graphics& g, Button& b, const Colour
 
 void GlowLookAndFeel::drawButtonText (Graphics& g, TextButton& b, bool highlighted, bool)
 {
-    g.setFont (uiFont (jmin (13.0f, b.getHeight() * 0.48f), true, 0.12f));
+    g.setFont (uiFont (jmin (14.0f, b.getHeight() * 0.52f), true, 0.08f));
     g.setColour (b.getToggleState() ? Colour (0xff2a1606) : (highlighted ? col::text : col::textDim));
     g.drawText (b.getButtonText(), b.getLocalBounds(), Justification::centred, false);
 }
@@ -205,17 +205,17 @@ void Knob::paint (Graphics& g)
 {
     auto r = getLocalBounds();
     g.setColour (col::text);
-    g.setFont (uiFont (big ? 12.5f : 11.0f, true, 0.18f));
+    g.setFont (uiFont (big ? 14.0f : 12.5f, true, 0.12f));
     g.drawText (title, r.removeFromTop (big ? 20 : 18), Justification::centred, false);
 
     // value pill
-    auto pill = r.removeFromBottom (big ? 26 : 24).withSizeKeepingCentre (big ? 78 : 66, big ? 20 : 18).toFloat();
+    auto pill = r.removeFromBottom (big ? 26 : 24).withSizeKeepingCentre (big ? 84 : 72, big ? 22 : 20).toFloat();
     g.setColour (Colour (0xff0c0907));
     g.fillRoundedRectangle (pill, 4.0f);
     g.setColour (col::panelEdge);
     g.drawRoundedRectangle (pill, 4.0f, 1.0f);
     g.setColour (col::amber);
-    g.setFont (uiFont (big ? 13.0f : 12.0f, true));
+    g.setFont (uiFont (big ? 14.5f : 13.5f, true));
     g.drawText (slider.getTextFromValue (slider.getValue()), pill, Justification::centred, false);
 }
 
@@ -552,6 +552,10 @@ void MainPanel::renderBackground()
                                        Colours::black.withAlpha (0.55f), 0.0f, 0.0f, true));
     g.fillAll();
 
+}
+
+void MainPanel::drawStatic (Graphics& g)
+{
     // header
     g.setGradientFill (ColourGradient (Colours::black.withAlpha (0.35f), 0, 0, Colours::transparentBlack, 0, 70, false));
     g.fillRect (0, 0, W, 70);
@@ -568,11 +572,11 @@ void MainPanel::renderBackground()
     g.setFont (uiFont (30.0f, true, 0.14f));
     g.drawText ("OPTO GLOW", 66, 10, 300, 34, Justification::centredLeft, false);
     g.setColour (col::textDim);
-    g.setFont (uiFont (10.5f, true, 0.28f));
+    g.setFont (uiFont (12.0f, true, 0.22f));
     g.drawText ("ROHIT JI  |  VINTAGE OPTO COMPRESSOR", 68, 42, 420, 16, Justification::centredLeft, false);
 
     g.setColour (col::textDim);
-    g.setFont (uiFont (10.5f, true, 0.25f));
+    g.setFont (uiFont (12.0f, true, 0.2f));
     g.drawText ("PRESET", W - 24 - 250 - 70, 20, 62, 30, Justification::centredRight, false);
 
     // panels
@@ -587,7 +591,7 @@ void MainPanel::renderBackground()
         g.setColour (col::panelEdge);
         g.drawRoundedRectangle (rf.reduced (0.5f), 10.0f, 1.0f);
 
-        g.setFont (uiFont (10.5f, true, 0.3f));
+        g.setFont (uiFont (12.0f, true, 0.24f));
         const int tw = GlyphArrangement::getStringWidthInt (g.getCurrentFont(), title) + 8;
         g.setColour (col::gold);
         g.drawText (title, r.getX() + 16, r.getY() + 6, tw + 10, 16, Justification::centredLeft, false);
@@ -618,14 +622,16 @@ void MainPanel::renderBackground()
 
     // footer
     g.setColour (col::textDim.withAlpha (0.7f));
-    g.setFont (uiFont (9.5f, true, 0.25f));
+    g.setFont (uiFont (11.0f, true, 0.2f));
     g.drawText ("VOCALS  -  DRUMS  -  BASS  -  MIX BUS", 26, H - 22, 400, 16, Justification::centredLeft, false);
     g.drawText ("v1.0  |  ROHIT JI", W - 26 - 300, H - 22, 300, 16, Justification::centredRight, false);
 }
 
 void MainPanel::paint (Graphics& g)
 {
+    g.setImageResamplingQuality (Graphics::highResamplingQuality);
     g.drawImage (background, getLocalBounds().toFloat());
+    drawStatic (g);
 
     // power / activity lamp
     {
@@ -674,13 +680,13 @@ void MainPanel::paint (Graphics& g)
     {
         auto r = descBox.reduced (12, 8);
         g.setColour (col::textDim);
-        g.setFont (uiFont (9.5f, true, 0.3f));
+        g.setFont (uiFont (11.0f, true, 0.24f));
         g.drawText ("CHARACTER", r.removeFromTop (14), Justification::centredLeft, false);
         g.setColour (col::amber);
         g.setFont (uiFont (17.0f, true, 0.12f));
         g.drawText (BKPOptoGlowProcessor::satTypeNames()[type], r.removeFromTop (24), Justification::centredLeft, false);
         g.setColour (col::text.withAlpha (0.85f));
-        g.setFont (uiFont (12.0f));
+        g.setFont (uiFont (13.0f));
         g.drawFittedText (satDescriptions[type], r.reduced (0, 2), Justification::topLeft, 4, 1.0f);
     }
 }

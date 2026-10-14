@@ -17,8 +17,8 @@ namespace col
     const juce::Colour gold        { 0xffd9a95b };
     const juce::Colour goldDim     { 0xff8a6a3c };
     const juce::Colour cream       { 0xfff4e6c3 };
-    const juce::Colour text        { 0xffe9dcc4 };
-    const juce::Colour textDim     { 0xff9c8b74 };
+    const juce::Colour text        { 0xfff6ead2 };
+    const juce::Colour textDim     { 0xffc2b096 };
     const juce::Colour red         { 0xffc8432f };
 }
 
@@ -102,6 +102,7 @@ public:
 private:
     void timerCallback() override;
     void renderBackground();
+    void drawStatic (juce::Graphics&);
     void refreshPresetBox();
 
     BKPOptoGlowProcessor& proc;
