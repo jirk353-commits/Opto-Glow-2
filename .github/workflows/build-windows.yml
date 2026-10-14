@@ -4,6 +4,9 @@ on:
   push:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   windows:
     runs-on: windows-latest
@@ -40,3 +43,14 @@ jobs:
         with:
           name: Opto-Glow-Windows
           path: dist/
+
+      - name: Publish download (GitHub Release)
+        if: github.ref == 'refs/heads/main'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          Compress-Archive -Path "dist/Opto Glow.vst3", "dist/INSTALL-WINDOWS.txt" -DestinationPath "dist/Opto-Glow-VST3-manual.zip" -Force
+          Copy-Item "dist/Opto Glow Installer.exe" "dist/Opto-Glow-Installer.exe"
+          gh release delete latest --yes --cleanup-tag 2>$null
+          gh release create latest "dist/Opto-Glow-Installer.exe" "dist/Opto-Glow-VST3-manual.zip" --title "Opto Glow by ROHIT JI (latest build)" --notes "Download Opto-Glow-Installer.exe and run it. Then rescan plugins in FL Studio / Cubase."
