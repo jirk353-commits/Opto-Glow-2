@@ -1,0 +1,42 @@
+name: Build Windows VST3 + Installer
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure (MSVC)
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+
+      - name: Build plugin
+        run: cmake --build build --config Release --target BKPOptoGlow_VST3 --parallel
+
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          Copy-Item "build/BKPOptoGlow_artefacts/Release/VST3/Opto Glow.vst3/Contents/x86_64-win/Opto Glow.vst3" "Installer/plugin.bin"
+          cd Installer
+          rc /nologo /fo installer.res installer.rc
+          cl /nologo /O2 /EHsc /DUNICODE /D_UNICODE installer.cpp installer.res /Fe:"Opto Glow Installer.exe" /link /SUBSYSTEM:WINDOWS /MANIFEST:NO shell32.lib ole32.lib user32.lib uuid.lib
+
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Copy-Item "Installer/Opto Glow Installer.exe" "dist/Opto Glow Installer.exe"
+          Copy-Item -Recurse "build/BKPOptoGlow_artefacts/Release/VST3/Opto Glow.vst3" "dist/Opto Glow.vst3"
+          Copy-Item "INSTALL-WINDOWS.txt" "dist/INSTALL-WINDOWS.txt"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Opto-Glow-Windows
+          path: dist/
