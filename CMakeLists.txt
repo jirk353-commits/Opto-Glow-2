@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.22)
 
 project(BKPOptoGlow VERSION 1.0.0 LANGUAGES C CXX)
 
+# Static MSVC runtime: the plugin needs no Visual C++ Redistributable on the user PC
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
