@@ -1,16 +1,21 @@
-# ROHIT JI Plugins
+# Opto Glow by ROHIT JI
 
-VST3 audio plugins for Windows (64-bit and 32-bit), built automatically with MSVC on GitHub Actions.
+Vintage opto compressor VST3 for Windows - LA-2A style **SMOOTH** and LA-3A style **PUNCH** modes,
+Warmth / Bite tone controls, 5 saturation types (Clean, Warm, Triode, Retro, Tape), analog VU meter
+and 10 presets.
 
-| Plugin | What it is | Download |
-|---|---|---|
-| **Opto Glow** | Vintage opto compressor (LA-2A / LA-3A style) with tone and saturation | [Opto-Glow-Setup.exe](../../releases/tag/opto-glow) |
-| **Glow Verb** | Algorithmic reverb: 9 environments, reverb EQ, saturation + air, sidechain ducking | [Glow-Verb-Setup.exe](../../releases/tag/glow-verb) |
+## Download
 
-Run the setup, click **Next > Install > Finish**. The installer lets you choose 64-bit, 32-bit or both.
+Go to **[Releases](../../releases/latest)** and pick:
 
-## Layout
+| File | For |
+|---|---|
+| **Opto-Glow-Setup-64bit.exe** | 64-bit FL Studio, Cubase and other modern DAWs (most people) |
+| **Opto-Glow-Setup-32bit.exe** | Older 32-bit DAWs only |
 
-- `OptoGlow/`, `GlowVerb/` - one JUCE/CMake project per plugin (`Source/`, `Tests/`, `Installer/` art)
-- `installer/plugin-setup.iss` - shared Inno Setup wizard
-- `.github/workflows/build-windows.yml` - builds x64 + Win32 for each plugin, makes the installers and publishes releases
+Run it and click **Next > Install > Finish**.
+
+## How it is built
+
+Every push to `main` builds the plugin with MSVC (x64 and Win32) on GitHub Actions, packages each
+into its own setup wizard (`Installer/setup.iss`, Inno Setup) and publishes them as the latest release.

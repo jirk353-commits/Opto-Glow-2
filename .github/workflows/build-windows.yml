@@ -1,4 +1,4 @@
-name: Build plugins (64-bit + 32-bit) and installers
+name: Build Opto Glow (64-bit + 32-bit) and release
 
 on:
   push:
@@ -7,91 +7,83 @@ on:
 permissions:
   contents: write
 
+env:
+  PLUGIN_NAME: "Opto Glow"
+  CMAKE_TARGET: BKPOptoGlow_VST3
+  ARTEFACTS: BKPOptoGlow_artefacts
+  FILE_BASE: Opto-Glow
+  OLD_NAME: "BKP Opto Glow"
+
 jobs:
   build:
-    name: ${{ matrix.plugin.name }} (${{ matrix.arch }})
+    name: ${{ matrix.bits }}-bit
     runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
-        arch: [x64, Win32]
-        plugin:
-          - { name: "Opto Glow", dir: OptoGlow, target: BKPOptoGlow_VST3, artefacts: BKPOptoGlow_artefacts }
-          - { name: "Glow Verb", dir: GlowVerb, target: GlowVerb_VST3,    artefacts: GlowVerb_artefacts }
+        include:
+          - { bits: "64", arch: x64,   guid: "6F2C1A8E-4B7D-4E59-9C1A-0B7A5D3E8F21" }
+          - { bits: "32", arch: Win32, guid: "0C9D4E21-7B3A-4A58-9E6F-2D1B8C7A5F34" }
     steps:
       - uses: actions/checkout@v5
 
       - name: Configure (MSVC ${{ matrix.arch }})
-        run: cmake -S ${{ matrix.plugin.dir }} -B build -A ${{ matrix.arch }}
+        run: cmake -S . -B build -A ${{ matrix.arch }}
 
-      - name: Build
-        run: cmake --build build --config Release --target ${{ matrix.plugin.target }} --parallel
+      - name: Build plugin
+        run: cmake --build build --config Release --target ${{ env.CMAKE_TARGET }} --parallel
 
-      - uses: actions/upload-artifact@v5
-        with:
-          name: ${{ matrix.plugin.dir }}-${{ matrix.arch }}
-          path: build/${{ matrix.plugin.artefacts }}/Release/VST3/${{ matrix.plugin.name }}.vst3
-
-  package:
-    name: Installer - ${{ matrix.plugin.name }}
-    needs: build
-    runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        plugin:
-          - { name: "Opto Glow", dir: OptoGlow, out: Opto-Glow-Setup, tag: opto-glow, guid: "6F2C1A8E-4B7D-4E59-9C1A-0B7A5D3E8F21", old: "BKP Opto Glow" }
-          - { name: "Glow Verb", dir: GlowVerb, out: Glow-Verb-Setup, tag: glow-verb, guid: "B3E7D412-9A5C-4F0E-8D21-6C4A7F19E0B5", old: "" }
-    steps:
-      - uses: actions/checkout@v5
-
-      - uses: actions/download-artifact@v5
-        with:
-          name: ${{ matrix.plugin.dir }}-x64
-          path: dl/x64
-
-      - uses: actions/download-artifact@v5
-        with:
-          name: ${{ matrix.plugin.dir }}-Win32
-          path: dl/x86
-
-      - name: Build setup wizard (Inno Setup)
+      - name: Build ${{ matrix.bits }}-bit setup
         shell: pwsh
         run: |
-          Get-ChildItem -Recurse dl | Select-Object FullName | Format-Table -HideTableHeaders
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress | Out-Null }
           $ws = $env:GITHUB_WORKSPACE
-          $args = @(
-            "/DAppName=${{ matrix.plugin.name }}",
-            "/DAppIdGuid=${{ matrix.plugin.guid }}",
-            "/DArtDir=$ws\${{ matrix.plugin.dir }}\Installer",
-            "/DDir64=$ws\dl\x64",
-            "/DDir32=$ws\dl\x86",
-            "/DOutName=${{ matrix.plugin.out }}",
+          $a = @(
+            "/DAppName=$env:PLUGIN_NAME",
+            "/DArch=${{ matrix.bits }}",
+            "/DAppIdGuid=${{ matrix.guid }}",
+            "/DArtDir=$ws\Installer",
+            "/DPluginDir=$ws\build\$env:ARTEFACTS\Release\VST3\$env:PLUGIN_NAME.vst3",
+            "/DOutName=$env:FILE_BASE-Setup-${{ matrix.bits }}bit",
             "/O$ws\out"
           )
-          if ("${{ matrix.plugin.old }}" -ne "") { $args += "/DOldName=${{ matrix.plugin.old }}" }
-          & $iscc @args "installer\plugin-setup.iss"
+          if ($env:OLD_NAME -ne "") { $a += "/DOldName=$env:OLD_NAME" }
+          & $iscc @a "Installer\setup.iss"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - uses: actions/upload-artifact@v5
         with:
-          name: ${{ matrix.plugin.out }}
-          path: out/${{ matrix.plugin.out }}.exe
+          name: setup-${{ matrix.bits }}bit
+          path: out/*.exe
 
-      - name: Publish GitHub Release
-        if: github.ref == 'refs/heads/main'
-        shell: pwsh
+  release:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          path: out
+          merge-multiple: true
+
+      - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
-          gh release delete ${{ matrix.plugin.tag }} --yes --cleanup-tag 2>$null
-          gh release create ${{ matrix.plugin.tag }} "out/${{ matrix.plugin.out }}.exe" --title "${{ matrix.plugin.name }} by ROHIT JI" --notes "Download ${{ matrix.plugin.out }}.exe, run it and click Next > Install > Finish. Includes 64-bit and 32-bit VST3."
+          ls -la out
+          for t in $(gh release list --json tagName -q '.[].tagName'); do gh release delete "$t" --yes --cleanup-tag || true; done
+          cat > notes.md <<NOTES
+          ## ${PLUGIN_NAME} by ROHIT JI - VST3 for Windows
 
-      - name: Remove the old single-plugin release
-        if: github.ref == 'refs/heads/main' && matrix.plugin.dir == 'OptoGlow'
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release delete latest --yes --cleanup-tag 2>$null; exit 0
+          | Download | Use it for |
+          |---|---|
+          | **${FILE_BASE}-Setup-64bit.exe** | 64-bit FL Studio, Cubase and other modern DAWs (most people need this one) |
+          | **${FILE_BASE}-Setup-32bit.exe** | Older 32-bit DAWs only |
+
+          Run the setup and click **Next > Install > Finish**. Then rescan plugins in your DAW.
+          NOTES
+          sed -i 's/^          //' notes.md
+          gh release create v1.0.0 out/${FILE_BASE}-Setup-64bit.exe out/${FILE_BASE}-Setup-32bit.exe \
+            --title "${PLUGIN_NAME} v1.0.0 (64-bit + 32-bit)" --notes-file notes.md --latest
