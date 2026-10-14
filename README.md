@@ -19,17 +19,11 @@ Vintage-style opto compressor VST3 by ROHIT JI.
 
 Includes 10 factory presets (Vocal Silk, Vocal Bite, Devotional Lead, Drum Bus Glue, Bass Thick, Retro Radio, ...).
 
-## Building the Windows VST3
+## Download
 
-**Easiest (no software needed):** upload this folder to a GitHub repository. The included
-workflow (`.github/workflows/build-windows.yml`) builds the plugin automatically. Open the
-**Actions** tab → latest run → download **Opto-Glow-Windows**.
+Get **Opto-Glow-Setup.exe** from the [latest release](../../releases/tag/latest), run it and click Next > Install > Finish.
 
-**On your own PC:** install Visual Studio 2022 (Desktop development with C++) and CMake, then:
+## How it is built
 
-```
-cmake -S . -B build -G "Visual Studio 17 2022" -A x64
-cmake --build build --config Release --target BKPOptoGlow_VST3
-```
-
-The plugin appears in `build/BKPOptoGlow_artefacts/Release/VST3/`. See `INSTALL-WINDOWS.txt`.
+Every push to `main` builds the plugin with MSVC on GitHub Actions and packages it into a
+standard setup wizard (Inno Setup, `Installer/OptoGlow.iss`), published as the `latest` release.

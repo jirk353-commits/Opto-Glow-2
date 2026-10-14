@@ -1,6 +1,3 @@
 build/
 build-*/
-Installer/plugin.bin
-Installer/*.res
-Installer/*.exe
-Checker/
+Installer/Output/

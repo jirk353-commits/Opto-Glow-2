@@ -19,30 +19,19 @@ jobs:
       - name: Build plugin
         run: cmake --build build --config Release --target BKPOptoGlow_VST3 --parallel
 
-      - uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
-
-      - name: Build installer
+      - name: Build setup wizard (Inno Setup)
         shell: pwsh
         run: |
-          Copy-Item "build/BKPOptoGlow_artefacts/Release/VST3/Opto Glow.vst3/Contents/x86_64-win/Opto Glow.vst3" "Installer/plugin.bin"
-          cd Installer
-          rc /nologo /fo installer.res installer.rc
-          cl /nologo /O2 /EHsc /DUNICODE /D_UNICODE installer.cpp installer.res /Fe:"Opto Glow Installer.exe" /link /SUBSYSTEM:WINDOWS /MANIFEST:NO shell32.lib ole32.lib user32.lib uuid.lib
-
-      - name: Package
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force -Path dist | Out-Null
-          Copy-Item "Installer/Opto Glow Installer.exe" "dist/Opto Glow Installer.exe"
-          Copy-Item -Recurse "build/BKPOptoGlow_artefacts/Release/VST3/Opto Glow.vst3" "dist/Opto Glow.vst3"
-          Copy-Item "INSTALL-WINDOWS.txt" "dist/INSTALL-WINDOWS.txt"
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress | Out-Null }
+          $plugin = "$env:GITHUB_WORKSPACE\build\BKPOptoGlow_artefacts\Release\VST3\Opto Glow.vst3"
+          & $iscc "/DPluginDir=$plugin" "Installer\OptoGlow.iss"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - uses: actions/upload-artifact@v5
         with:
-          name: Opto-Glow-Windows
-          path: dist/
+          name: Opto-Glow-Setup
+          path: Installer/Output/Opto-Glow-Setup.exe
 
       - name: Publish download (GitHub Release)
         if: github.ref == 'refs/heads/main'
@@ -50,7 +39,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          Compress-Archive -Path "dist/Opto Glow.vst3", "dist/INSTALL-WINDOWS.txt" -DestinationPath "dist/Opto-Glow-VST3-manual.zip" -Force
-          Copy-Item "dist/Opto Glow Installer.exe" "dist/Opto-Glow-Installer.exe"
           gh release delete latest --yes --cleanup-tag 2>$null
-          gh release create latest "dist/Opto-Glow-Installer.exe" "dist/Opto-Glow-VST3-manual.zip" --title "Opto Glow by ROHIT JI (latest build)" --notes "Download Opto-Glow-Installer.exe and run it. Then rescan plugins in FL Studio / Cubase."
+          gh release create latest "Installer/Output/Opto-Glow-Setup.exe" --title "Opto Glow by ROHIT JI" --notes "Download Opto-Glow-Setup.exe, run it and click Next > Install > Finish."
